@@ -9,11 +9,54 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3"></script>
   <style>
-    :root { --bg: #1a1b26; --card: #24283b; --text: #c0caf5; --accent: #7aa2f7; --muted: #565f89; }
+    :root { --bg: #0f172a; --card: #111827; --card-soft: #020617; --text: #e5e7eb; --accent: #7aa2f7; --accent-soft: rgba(122,162,247,0.12); --muted: #6b7280; --border-subtle: #1f2937; }
     * { box-sizing: border-box; }
-    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 1rem; min-height: 100vh; }
-    h1 { font-size: 1.5rem; margin: 0 0 1rem; color: var(--accent); }
-    section { background: var(--card); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: radial-gradient(circle at top left, #020617 0, #020617 35%, #020617 60%, #020617 100%); color: var(--text); margin: 0; min-height: 100vh; }
+
+    .app-shell {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 2rem;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      margin: 0 0 0.5rem;
+      color: var(--text);
+      letter-spacing: 0.03em;
+    }
+
+    .app-subtitle {
+      margin: 0 0 1.25rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .tabs {
+      display: inline-flex;
+      padding: 0.2rem;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid var(--border-subtle);
+      margin-bottom: 1rem;
+    }
+    .tab-button {
+      border-radius: 999px;
+      padding: 0.45rem 0.9rem;
+      font-size: 0.9rem;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      min-height: auto;
+      margin: 0;
+    }
+    .tab-button.active {
+      background: var(--accent-soft);
+      color: var(--text);
+    }
+
+    section { background: linear-gradient(135deg, var(--card-soft), var(--card)); border-radius: 14px; padding: 1rem 1.1rem 1.1rem; margin-bottom: 1rem; border: 1px solid var(--border-subtle); box-shadow: 0 18px 45px rgba(15,23,42,0.6); }
     section h2 { font-size: 1rem; margin: 0 0 0.75rem; color: var(--muted); }
     input[type="file"], button { margin-right: 0.5rem; margin-bottom: 0.5rem; }
     button {
@@ -38,7 +81,12 @@
     .compact-row .compact-label { font-size: 0.85rem; color: var(--muted); margin-right: 0.25rem; }
     .example-buttons { display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; }
     .example-buttons button { padding: 0.25rem 0.6rem; font-size: 0.85rem; min-height: auto; }
+    .example-buttons button.no-graph {
+      opacity: 0.55;
+      border: 1px dashed var(--muted);
+    }
     #chart-buttons { max-width: 100%; overflow-x: auto; overflow-y: hidden; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+    #chart-buttons button { white-space: nowrap; }
     #chart-buttons::-webkit-scrollbar { height: 6px; }
     #chart-buttons::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 3px; }
     button.small { padding: 0.2rem 0.5rem; font-size: 0.8rem; }
@@ -70,49 +118,149 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     @keyframes slide { 0%, 100% { transform: translateX(-100%); } 50% { transform: translateX(250%); } }
     .upload-loading.hidden { display: none; }
+
+    .two-column {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.1fr);
+      gap: 1rem;
+    }
+    @media (max-width: 900px) {
+      .two-column { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    .builder-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.75rem 1.25rem;
+      margin-top: 0.75rem;
+    }
+    .builder-field label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 0.25rem;
+    }
+    .builder-field input,
+    .builder-field select,
+    .builder-field textarea {
+      width: 100%;
+      background: #020617;
+      border-radius: 6px;
+      border: 1px solid var(--border-subtle);
+      color: var(--text);
+      padding: 0.4rem 0.5rem;
+      font-size: 0.85rem;
+    }
+    .builder-field textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+    .builder-note {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 0.4rem;
+    }
+
+    .hidden { display: none; }
   </style>
 </head>
 <body>
-  <h1>PHREEQC Web</h1>
+  <div class="app-shell">
+    <h1>PHREEQC Web</h1>
+    <p class="app-subtitle">Run official examples, inspect USER_GRAPH charts, and (soon) build PHREEQC inputs from a friendly form.</p>
 
-  <section>
-    <h2>Upload & run</h2>
-    <form id="upload-form">
-      <input type="file" name="file" accept=".pqi,.dat,.inp,.txt" id="file-input">
-      <label><input type="checkbox" name="run" id="run-after"> Run phreeqc after upload</label>
-      <span class="message" style="margin:0; font-size:0.8rem;">(choose file, then click Upload)</span>
-      <button type="submit" id="upload-btn">Upload</button>
-    </form>
-    <div class="upload-loading hidden" id="upload-loading" aria-live="polite">
-      <span class="spinner" aria-hidden="true"></span>
-      <span class="bar"></span>
-      <span id="upload-loading-text">Uploading…</span>
+    <div class="tabs">
+      <button type="button" class="tab-button active" data-tab="run">Run examples &amp; charts</button>
+      <button type="button" class="tab-button" data-tab="builder">Build PHREEQC input (beta)</button>
     </div>
-    <p class="message" id="upload-msg"></p>
-    <p class="message" style="font-size: 0.85rem; margin-top: 0.25rem;">If phreeqc isn’t found, build from repo root: <code>cmake -S og -B build && cmake --build build</code> Or run phreeqc yourself and copy <code>phreeqc_user_graph_*.json</code> into <code>rrt_webapp/data/output/</code>, then Refresh.</p>
-  </section>
 
-  <section>
-    <h2>Examples & charts</h2>
-    <div class="compact-row examples-charts-row">
-      <div id="example-buttons" class="example-buttons"></div>
-      <button type="button" class="secondary small" id="refresh-charts">Refresh</button>
-      <div id="chart-buttons" class="example-buttons"></div>
-    </div>
-    <p class="message" style="font-size: 0.8rem; margin-top: 0.35rem;">Repo <code>examples/</code>: click an example to run it. Charts from that run appear below automatically (e.g. Ex. 5 has USER_GRAPH). Only repo example runs are shown.</p>
-  </section>
+    <div id="tab-run">
+      <section>
+        <h2>Upload & run</h2>
+        <form id="upload-form">
+          <input type="file" name="file" accept=".pqi,.dat,.inp,.txt" id="file-input">
+          <label><input type="checkbox" name="run" id="run-after"> Run phreeqc after upload</label>
+          <span class="message" style="margin:0; font-size:0.8rem;">(choose file, then click Upload)</span>
+          <button type="submit" id="upload-btn">Upload</button>
+        </form>
+        <div class="upload-loading hidden" id="upload-loading" aria-live="polite">
+          <span class="spinner" aria-hidden="true"></span>
+          <span class="bar"></span>
+          <span id="upload-loading-text">Uploading…</span>
+        </div>
+        <p class="message" id="upload-msg"></p>
+        <p class="message" style="font-size: 0.85rem; margin-top: 0.25rem;">If phreeqc isn’t found, build from repo root: <code>cmake -S og -B build && cmake --build build</code> Or run phreeqc yourself and copy <code>phreeqc_user_graph_*.json</code> into <code>rrt_webapp/data/output/</code>, then Refresh.</p>
+      </section>
 
-  <section>
-    <h2>Chart</h2>
-    <div class="chart-toolbar">
-      <button type="button" class="secondary" id="chart-reset-zoom" title="Reset zoom/pan">Reset zoom</button>
-      <button type="button" class="secondary" id="chart-save-png" title="Download chart as PNG with transparent background">Save PNG (transparent)</button>
-      <label><input type="checkbox" id="chart-grid" checked> Grid</label>
-      <label><input type="checkbox" id="chart-use-scale" checked> Use axis scale from file</label>
+      <section>
+        <h2>Examples & charts</h2>
+        <div class="compact-row examples-charts-row">
+          <div id="example-buttons" class="example-buttons"></div>
+          <button type="button" class="secondary small" id="refresh-charts">Refresh</button>
+          <div id="chart-buttons" class="example-buttons" style="display:none;"></div>
+        </div>
+        <p class="message" style="font-size: 0.8rem; margin-top: 0.35rem;">Repo <code>examples/</code>: click an example to run it. Charts from that run appear below automatically (e.g. Ex. 5 has USER_GRAPH). Only repo example runs are shown.</p>
+      </section>
+
+      <section>
+        <h2>Chart</h2>
+        <div class="chart-toolbar">
+          <button type="button" class="secondary" id="chart-reset-zoom" title="Reset zoom/pan">Reset zoom</button>
+          <button type="button" class="secondary" id="chart-save-png" title="Download chart as PNG with transparent background">Save PNG (transparent)</button>
+          <label><input type="checkbox" id="chart-grid" checked> Grid</label>
+          <label><input type="checkbox" id="chart-use-scale" checked> Use axis scale from file</label>
+        </div>
+        <p class="message" style="font-size: 0.85rem; margin-top: 0.25rem;">Save PNG exports with transparent background.</p>
+        <div id="chart-container"><canvas id="chart"></canvas></div>
+      </section>
     </div>
-    <p class="message" style="font-size: 0.85rem; margin-top: 0.25rem;">Save PNG exports with transparent background.</p>
-    <div id="chart-container"><canvas id="chart"></canvas></div>
-  </section>
+
+    <div id="tab-builder" class="hidden">
+      <section>
+        <h2>Build PHREEQC input (beta)</h2>
+        <div class="two-column">
+          <div>
+            <div class="builder-field">
+              <label for="builder-template">Start from</label>
+              <select id="builder-template">
+                <option value="blank">Blank input</option>
+                <option value="pyrite">Pyrite oxidation (Ex. 11 style)</option>
+                <option value="gypsum">Gypsum / anhydrite solubility (Ex. 2B style)</option>
+                <option value="feldspar">K-feldspar reaction path (Ex. 6 style)</option>
+              </select>
+            </div>
+            <div class="builder-grid">
+              <div class="builder-field">
+                <label for="builder-title">Title</label>
+                <input id="builder-title" placeholder="e.g. Pyrite oxidation at pH 3.5">
+              </div>
+              <div class="builder-field">
+                <label for="builder-ph">Initial pH</label>
+                <input id="builder-ph" type="number" step="0.1" placeholder="e.g. 7.0">
+              </div>
+              <div class="builder-field">
+                <label for="builder-temp">Temperature (°C)</label>
+                <input id="builder-temp" type="number" step="1" placeholder="e.g. 25">
+              </div>
+              <div class="builder-field">
+                <label for="builder-solution">Solution composition (quick)</label>
+                <textarea id="builder-solution" placeholder="Na 1e-3; Ca 1e-4; SO4 1e-3"></textarea>
+              </div>
+              <div class="builder-field">
+                <label for="builder-minerals">Minerals in contact</label>
+                <textarea id="builder-minerals" placeholder="Pyrite 0 10&#10;Calcite 0 0"></textarea>
+              </div>
+            </div>
+            <p class="builder-note">This builder is a sketch of a friendlier PHREEQC input wizard: fewer knobs up front, good defaults, and the app generates a full `.pqi` file behind the scenes. For now it just previews the text it would write.</p>
+          </div>
+          <div class="builder-field">
+            <label for="builder-preview">Preview PHREEQC input (read‑only)</label>
+            <textarea id="builder-preview" readonly placeholder="As you fill fields on the left, a PHREEQC input preview will appear here."></textarea>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
 
   <script>
     const uploadForm = document.getElementById('upload-form');
@@ -167,6 +315,56 @@
       return path.split('/').map(encodeURIComponent).join('/');
     }
 
+    // ----- Graphic type taxonomy for USER_GRAPH charts -----
+    const GRAPHIC_TYPES = {
+      reaction_path: {
+        label: 'Reaction path diagram',
+        description: 'Curves vs reaction progress, mass added, or evolving composition.'
+      },
+      stability_field: {
+        label: 'Phase / stability-field diagram',
+        description: 'Phase-boundary lines dividing mineral stability regions.'
+      },
+      solubility_curve: {
+        label: 'Solubility curve',
+        description: 'Concentration or saturation index vs pH or activity.'
+      },
+      ph_eh: {
+        label: 'pH–Eh diagram',
+        description: 'Redox potential vs pH with stability fields.'
+      },
+      time_series: {
+        label: 'Time-series (kinetic)',
+        description: 'Quantities vs time for kinetic reactions or transients.'
+      },
+      simple_xy: {
+        label: 'Simple x–y function plot',
+        description: 'Single curve y(x) from an analytic or Basic function.'
+      },
+      multi_dissolution: {
+        label: 'Multi-curve stoichiometry / dissolution plot',
+        description: 'Several minerals or species vs the same progress variable.'
+      }
+    };
+
+    const GRAPHIC_TYPE_RULES = [
+      { typeId: 'stability_field',  test: (spec) => /K-?Feldspar Reaction Path/i.test(spec.chart_title || '') },
+      { typeId: 'solubility_curve', test: (spec) => /Fluorite Equilibrium/i.test(spec.chart_title || '') },
+      { typeId: 'multi_dissolution', test: (spec) => /Pyrite Oxidation/i.test(spec.chart_title || '') },
+      { typeId: 'solubility_curve', test: (spec) => /Log Y .*axis_scale log/i.test(spec.chart_title || '') },
+      { typeId: 'simple_xy',        test: (spec) => spec.axis_titles && /Angle, in degrees/i.test(spec.axis_titles[0] || '') && /Sine\(angle\)/i.test(spec.axis_titles[1] || '') }
+      // Future: add pH–Eh, time-series, etc.
+    ];
+
+    function classifyGraphicType(spec) {
+      for (const rule of GRAPHIC_TYPE_RULES) {
+        try {
+          if (rule.test(spec)) return GRAPHIC_TYPES[rule.typeId] || null;
+        } catch (_) {}
+      }
+      return null;
+    }
+
     async function loadExamples() {
       try {
         const r = await fetch('/api/examples');
@@ -175,7 +373,10 @@
         exampleButtons.innerHTML = examples.length
           ? examples.map(ex => {
               const title = ex.description ? escapeAttr(ex.description) : '';
-              return `<button type="button" class="secondary" data-name="${escapeAttr(ex.name)}"${title ? ` title="${title}"` : ''}>${escapeAttr(ex.label)}</button>`;
+              const hasGraph = !!ex.has_graph;
+              const cls = hasGraph ? 'secondary' : 'secondary no-graph';
+              const tooltip = title || (!hasGraph ? 'This example has no USER_GRAPH (no chart).' : '');
+              return `<button type="button" class="${cls}" data-name="${escapeAttr(ex.name)}"${tooltip ? ` title="${escapeAttr(tooltip)}"` : ''}>${escapeAttr(ex.label)}</button>`;
             }).join('')
           : '<span class="message">No .pqi files in manual_examples/files/</span>';
         exampleButtons.querySelectorAll('button[data-name]').forEach(btn => {
@@ -251,10 +452,21 @@
 
     function chartButtonLabel(c) {
       const num = (c.name || '').replace(/^phreeqc_user_graph_|\.json$/gi, '') || '?';
-      if (!c.source) return num;
+      const title = (c.title || '').trim();
+      // Prefer backend classification, but fall back to a quick client-side guess from the title.
+      let typeLabel = c.graphic_type_label || (c.graphic_type && c.graphic_type.label) || '';
+      if (!typeLabel && title) {
+        const guessed = classifyGraphicType({ chart_title: title, axis_titles: c.axis_titles || [] });
+        if (guessed) typeLabel = guessed.label;
+      }
+      const baseTitle = title || ('Chart ' + num);
+      if (!c.source) {
+        return typeLabel ? `${typeLabel} · ${baseTitle}` : baseTitle;
+      }
       const base = c.source.toLowerCase();
       const exLabel = base.startsWith('ex') ? 'Ex. ' + base.slice(2) : c.source;
-      return exLabel + ' — ' + num;
+      const left = title || `${exLabel} · chart ${num}`;
+      return typeLabel ? `${typeLabel} · ${left}` : left;
     }
 
     async function loadCharts() {
@@ -284,7 +496,15 @@
       uploadMsg.classList.remove('error');
       currentChartPath = path;
       const spec = await r.json();
-      currentChartTitle = (spec.chart_title || 'USER_GRAPH').replace(/[^\w\s-]/g, '').replace(/\s+/g, '_') || 'chart';
+      const graphicType = classifyGraphicType(spec);
+      const baseTitle = spec.chart_title || 'USER_GRAPH';
+      // For the on-chart title, prefer a two-line layout:
+      // [Generic type]
+      // [Example-specific title]
+      const titleLines = graphicType ? [graphicType.label, baseTitle] : [baseTitle];
+      // For filenames, keep a single-line, compact form.
+      const fullTitle = graphicType ? `${graphicType.label} — ${baseTitle}` : baseTitle;
+      currentChartTitle = fullTitle.replace(/[^\w\s-]/g, '').replace(/\s+/g, '_') || 'chart';
       if (currentChart) currentChart.destroy();
       const series = spec.series || [];
       const axisTitles = spec.axis_titles || [];
@@ -308,15 +528,26 @@
         const hex = seriesColor(s.color, defaultPalette[i % defaultPalette.length]);
         const pointStyle = seriesPointStyle(s.symbol);
         const lineOnly = isLineOnly(s);
-        const data = (s.x || [])
+        let data = (s.x || [])
           .map((xv, j) => ({ x: xv, y: (s.y || [])[j] }))
-          .filter(p => typeof p.x === 'number' && typeof p.y === 'number')
-          .sort((a, b) => a.x - b.x);
+          .filter(p => typeof p.x === 'number' && typeof p.y === 'number');
+        // For TSV-based point clouds (e.g. Ex. 2B), sort by x so lines are smooth.
+        // For USER_GRAPH curves and phase boundaries (e.g. feldspar stability fields),
+        // preserve original point order from PHREEQC.
+        if (hasTsvOverlay && !lineOnly) {
+          data = data.slice().sort((a, b) => a.x - b.x);
+        }
         const stroke = lineOnly && (s.color || '').toLowerCase() === 'black'
           ? '#565f89' : hex;
         const label = (s.id && s.id.trim()) || (calcLabels && i >= 6 ? calcLabels[i - 6] : null) ||
           (lineOnly && !(s.id && s.id.trim()) ? 'Phase boundary' : null) || `Series ${i + 1}`;
         const pointsOnly = hasTsvOverlay && !lineOnly;
+        const basePointRadius = lineOnly ? 0 : 5;
+        const borderWidth = lineOnly
+          ? 2.0
+          // For connected point-series, keep the line much thinner than the points
+          // so markers stay visually dominant (~20–30% of point size).
+          : (pointsOnly ? 0 : Math.max(0.8, basePointRadius * 0.25));
         return {
           label,
           data,
@@ -325,9 +556,9 @@
           pointBackgroundColor: hex,
           pointBorderColor: hex,
           pointBorderWidth: 1,
-          borderWidth: lineOnly ? 2.5 : (pointsOnly ? 0 : 2),
+          borderWidth,
           tension: lineOnly ? 0 : 0.1,
-          pointRadius: lineOnly ? 0 : 4,
+          pointRadius: basePointRadius,
           pointHoverRadius: 6,
           pointStyle: pointStyle || undefined,
           yAxisID: (hasY2 && s.y_axis === 2) ? 'y2' : 'y',
@@ -360,8 +591,15 @@
 
       const isKFeldspar = (spec.chart_title || '').indexOf('K-Feldspar') !== -1;
       const plugins = {
-        title: { display: true, text: spec.chart_title || 'USER_GRAPH', font: { size: 16 } },
-        legend: { position: 'top' },
+        title: { display: true, text: titleLines, font: { size: 16 } },
+        legend: {
+          position: 'top',
+          labels: {
+            usePointStyle: true,
+            boxWidth: 10,
+            boxHeight: 10
+          }
+        },
         tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y?.toFixed(4) ?? ctx.parsed.y} at x = ${ctx.parsed.x?.toFixed(4) ?? ctx.parsed.x}` } },
         zoom: {
           zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy' },
@@ -370,12 +608,52 @@
         }
       };
       if (isKFeldspar && typeof Chart !== 'undefined' && Chart.registry && Chart.registry.getPlugin('annotation')) {
+        // Hand-tuned label positions to visually match the PHREEQC manual figure.
+        // These are approximate and intentionally avoid landing exactly on the lines.
         plugins.annotation = {
           annotations: {
-            kMica:    { type: 'label', xValue: -6.5, yValue: 6.5, content: 'K-mica',    backgroundColor: 'rgba(36,40,59,0.85)', font: { size: 12 }, color: '#c0caf5', adjustScaleRange: false },
-            gibbsite: { type: 'label', xValue: -5.5, yValue: 2.5, content: 'Gibbsite', backgroundColor: 'rgba(36,40,59,0.85)', font: { size: 12 }, color: '#c0caf5', adjustScaleRange: false },
-            kaolinite: { type: 'label', xValue: -3.5, yValue: 0.5, content: 'Kaolinite', backgroundColor: 'rgba(36,40,59,0.85)', font: { size: 12 }, color: '#c0caf5', adjustScaleRange: false },
-            kFeldspar: { type: 'label', xValue: -1.2, yValue: 4,   content: 'K-feldspar', backgroundColor: 'rgba(36,40,59,0.85)', font: { size: 12 }, color: '#c0caf5', adjustScaleRange: false }
+            kMica: {
+              type: 'label',
+              // Place inside the K‑mica wedge, visually nearer its center.
+              xValue: -5.3,
+              yValue: 6.4,
+              content: 'K-mica',
+              backgroundColor: 'rgba(15,23,42,0.9)',
+              font: { size: 12 },
+              color: '#c0caf5',
+              adjustScaleRange: false
+            },
+            gibbsite: {
+              type: 'label',
+              // Further left so it clearly lies in the Gibbsite field left of its boundary.
+              xValue: -6.8,
+              yValue: 3.0,
+              content: 'Gibbsite',
+              backgroundColor: 'rgba(15,23,42,0.9)',
+              font: { size: 12 },
+              color: '#c0caf5',
+              adjustScaleRange: false
+            },
+            kaolinite: {
+              type: 'label',
+              xValue: -3.8,
+              yValue: 0.2,
+              content: 'Kaolinite',
+              backgroundColor: 'rgba(15,23,42,0.9)',
+              font: { size: 12 },
+              color: '#c0caf5',
+              adjustScaleRange: false
+            },
+            kFeldspar: {
+              type: 'label',
+              xValue: -1.0,
+              yValue: 3.6,
+              content: 'K-feldspar',
+              backgroundColor: 'rgba(15,23,42,0.9)',
+              font: { size: 12 },
+              color: '#c0caf5',
+              adjustScaleRange: false
+            }
           }
         };
       }
@@ -408,6 +686,63 @@
     refreshBtn.addEventListener('click', loadCharts);
     loadExamples();
     loadCharts();
+
+    // Simple tab switcher between run + builder views
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabRun = document.getElementById('tab-run');
+    const tabBuilder = document.getElementById('tab-builder');
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        tabButtons.forEach(b => b.classList.toggle('active', b === btn));
+        if (tab === 'builder') {
+          tabRun.classList.add('hidden');
+          tabBuilder.classList.remove('hidden');
+        } else {
+          tabRun.classList.remove('hidden');
+          tabBuilder.classList.add('hidden');
+        }
+      });
+    });
+
+    // Very lightweight preview of builder fields -> PHREEQC text
+    const builderTemplate = document.getElementById('builder-template');
+    const builderTitle = document.getElementById('builder-title');
+    const builderPh = document.getElementById('builder-ph');
+    const builderTemp = document.getElementById('builder-temp');
+    const builderSolution = document.getElementById('builder-solution');
+    const builderMinerals = document.getElementById('builder-minerals');
+    const builderPreview = document.getElementById('builder-preview');
+    function updateBuilderPreview() {
+      if (!builderPreview) return;
+      const lines = [];
+      const tpl = (builderTemplate && builderTemplate.value) || 'blank';
+      const title = builderTitle.value.trim();
+      if (title) lines.push('TITLE ' + title);
+      else lines.push('TITLE Example input (builder)');
+      lines.push('');
+      lines.push('SOLUTION 1');
+      if (builderPh.value) lines.push('    pH ' + builderPh.value + ' charge');
+      if (builderTemp.value) lines.push('    temp ' + builderTemp.value);
+      if (builderSolution.value.trim()) lines.push('    # Quick composition', '    ' + builderSolution.value.trim());
+      lines.push('');
+      if (builderMinerals.value.trim()) {
+        lines.push('EQUILIBRIUM_PHASES 1');
+        builderMinerals.value.split(/\\r?\\n/).forEach(row => {
+          const r = row.trim();
+          if (r) lines.push('    ' + r);
+        });
+        lines.push('');
+      }
+      lines.push('# Template: ' + tpl);
+      builderPreview.value = lines.join('\\n');
+    }
+    [builderTemplate, builderTitle, builderPh, builderTemp, builderSolution, builderMinerals].forEach(el => {
+      if (!el) return;
+      el.addEventListener('input', updateBuilderPreview);
+      el.addEventListener('change', updateBuilderPreview);
+    });
+    updateBuilderPreview();
   </script>
 </body>
 </html>

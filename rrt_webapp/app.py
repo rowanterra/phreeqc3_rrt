@@ -155,15 +155,68 @@ def run_phreeqc(input_path: Path, output_dir: Optional[Path] = None) -> str:
         return str(e)
 
 
+def _classify_graphic_type(chart: dict) -> tuple[Optional[str], Optional[str]]:
+    """
+    Best-effort classification of a USER_GRAPH JSON into a generic graphic type.
+    Returns (type_id, label) or (None, None) if unknown.
+    """
+    title = (chart.get("chart_title") or "").strip()
+    axis_titles = chart.get("axis_titles") or []
+    x_title = (axis_titles[0] if len(axis_titles) > 0 else "") or ""
+    y_title = (axis_titles[1] if len(axis_titles) > 1 else "") or ""
+    t_low = title.lower()
+    x_low = x_title.lower()
+    y_low = y_title.lower()
+
+    # These labels mirror the vocabulary used in the frontend.
+    if "k-feldspar reaction path" in t_low:
+        return "stability_field", "Phase / stability-field diagram"
+    if "reaction path" in t_low:
+        return "reaction_path", "Reaction path diagram"
+    if "fluorite equilibrium" in t_low:
+        return "solubility_curve", "Solubility curve"
+    if "pyrite oxidation" in t_low:
+        return "multi_dissolution", "Multi-curve stoichiometry / dissolution plot"
+    if "log y" in t_low and "axis_scale log" in t_low:
+        return "solubility_curve", "Solubility curve"
+    if "angle, in degrees" in x_low and "sine(angle" in y_low:
+        return "simple_xy", "Simple x–y function plot"
+    if "eh" in y_low and "ph" in x_low:
+        return "ph_eh", "pH–Eh diagram"
+    return None, None
+
+
 def _chart_entry(path: Path, rel_path: str, data_dir: Path, repo_root: Path) -> dict:
-    """Build one chart list entry with path, name, and source (folder name for display)."""
+    """Build one chart list entry with path, name, source (example), title, and generic graphic type."""
     name = path.name
     try:
         # Source = parent dir name (e.g. ex5, all_manual_graphics) so list is clearer
         parent = path.parent.name
     except Exception:
         parent = ""
-    return {"path": rel_path, "name": name, "source": parent or None}
+    title: Optional[str] = None
+    graphic_type_id: Optional[str] = None
+    graphic_type_label: Optional[str] = None
+    try:
+        with open(path) as f:
+            data = json.load(f)
+            t = data.get("chart_title")
+            if isinstance(t, str) and t.strip():
+                title = t.strip()
+            type_id, type_label = _classify_graphic_type(data)
+            graphic_type_id, graphic_type_label = type_id, type_label
+    except Exception:
+        title = None
+    entry = {
+        "path": rel_path,
+        "name": name,
+        "source": parent or None,
+        "title": title,
+    }
+    if graphic_type_id and graphic_type_label:
+        entry["graphic_type_id"] = graphic_type_id
+        entry["graphic_type_label"] = graphic_type_label
+    return entry
 
 
 def _repo_example_names() -> set:
@@ -315,10 +368,17 @@ def list_examples():
         files = [p for p in REPO_EXAMPLES_DIR.iterdir() if _is_repo_example_input(p)]
         files.sort(key=lambda p: _example_sort_key(p.name))
         for p in files:
+            has_graph = False
+            try:
+                text = (p.read_text(encoding="utf-8", errors="ignore") or "").upper()
+                has_graph = "USER_GRAPH" in text
+            except Exception:
+                has_graph = False
             examples.append({
                 "name": p.name,
                 "label": _example_label(p.name),
                 "description": EXAMPLE_DESCRIPTIONS.get(p.name.lower(), ""),
+                "has_graph": has_graph,
             })
     return jsonify({"examples": examples})
 
