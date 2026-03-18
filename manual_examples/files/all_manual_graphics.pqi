@@ -1,0 +1,115 @@
+# All USER_GRAPH graphic types from the PHREEQC manual (tm6-A43.txt)
+# Run from repo root: ./webapp/run_all_manual_graphics.sh
+# Or: phreeqc manual_examples/files/all_manual_graphics.pqi  (from repo root)
+# Or: upload in Flask webapp and click "Run after upload"; then Refresh to see charts.
+# (Flask overwrites DATABASE when running.)
+DATABASE database/phreeqc.dat
+TITLE All manual USER_GRAPH types - PLOT_XY, GRAPH_X/Y/SY, sine, axis options
+
+# ========== Part 1: Manual Example 1 - PLOT_XY (F and pH vs Ca, primary + secondary Y) ==========
+SOLUTION 1  Pure water
+        pH      7
+        temp    25
+EQUILIBRIUM_PHASES 1
+        Fluorite        0.0
+REACTION 1
+        Ca(OH)2  1
+        0.0     0.0005   0.001   0.002   0.004   0.006   0.008   0.01    0.015   0.02    0.03    0.05
+USER_GRAPH 1  Plots F and pH against Ca (PLOT_XY style)
+        -headings F pH
+        -axis_titles "Calcium, in milligrams per liter" "Fluoride, in milligrams per liter" "pH"
+        -chart_title "Fluorite Equilibrium in Ca(OH)2 Solutions (Manual Example 1)"
+        -axis_scale x_axis 0 350 50 25
+        -axis_scale y_axis 0 7 1
+        -axis_scale sy_axis 7 14 0 0
+        -initial_solutions false
+        -connect_simulations true
+        -start
+  10 PLOT_XY TOT("Ca")*40.08e3, TOT("F")*19e3, color = Red, symbol = Square, symbol_size = 6, y_axis = 1
+  20 PLOT_XY TOT("Ca")*40.08e3, -LA("H+"), color = Green, symbol = Diamond, symbol_size = 7, y_axis = 2, line_width = 1
+        -end
+END
+
+# ========== Part 2: Manual Example 2 - GRAPH_X, GRAPH_Y, GRAPH_SY (same data, concise style) ==========
+SOLUTION 2  Pure water
+        pH      7
+        temp    25
+EQUILIBRIUM_PHASES 2
+        Fluorite        0.0
+REACTION 2
+        Ca(OH)2  1
+        0.0     0.0005   0.001   0.002   0.004   0.006   0.008   0.01    0.015   0.02    0.03    0.05
+USER_GRAPH 2  Uses GRAPH_X, GRAPH_Y, GRAPH_SY
+        -headings Ca F pH
+        -axis_titles "Calcium, in milligrams per liter" "Fluoride, in milligrams per liter" "pH"
+        -chart_title "Fluorite Equilibrium (Manual Example 2 - GRAPH_X/Y/SY)"
+        -start
+  10 GRAPH_X TOT("Ca") * 40.08e3
+  20 GRAPH_Y TOT("F") * 19e3
+  30 GRAPH_SY -LA("H+")
+        -end
+END
+
+# ========== Part 3: Manual Figure 3 - Sine function (GRAPH_X, GRAPH_Y, axis_scale) ==========
+SOLUTION 3
+REACTION 3
+        H2O     0
+        0 in 21
+USER_GRAPH 3  Sine function (Manual Figure 3)
+        -axis_titles "Angle, in degrees" "Sine(angle)"
+        -axis_scale x_axis 0 360 90
+        -start
+  10 pi = 2 * arctan(1e20)
+  20 i = pi * (step_no - 1) / 10
+  30 GRAPH_X i * 180 / pi
+  40 GRAPH_Y sin(i)
+        -end
+END
+
+# ========== Part 4: Multiple curves, symbols, secondary axis (like Pyrite oxidation) ==========
+SOLUTION 4  Pure water
+        pH      7
+        temp    25
+EQUILIBRIUM_PHASES 4
+        Pyrite          0.0
+        Goethite        0.0
+        Calcite         0.0
+        CO2(g)         -3.5
+        Gypsum          0.0     0.0
+REACTION 4
+        O2      1.0
+        NaCl    0.5
+        0.0     0.001   0.005   0.01   0.03   0.05
+USER_GRAPH 4  Multiple PLOT_XY curves and secondary Y
+        -headings Pyrite Goethite Calcite CO2(g) Gypsum SI_Gypsum
+        -chart_title "Pyrite Oxidation (Manual-style multiple curves)"
+        -axis_titles "O2 added, millimoles" "Millimoles dissolved" "Saturation index"
+        -start
+  10 x = RXN * 1e3
+  20 PLOT_XY x, 1e3 * (10 - EQUI("Pyrite")), symbol = Plus
+  30 PLOT_XY x, 1e3 * (10 - EQUI("Goethite")), symbol = Plus
+  40 PLOT_XY x, 1e3 * (10 - EQUI("Calcite")), symbol = Plus
+  50 PLOT_XY x, 1e3 * (10 - EQUI("CO2(g)")), symbol = Plus
+  60 PLOT_XY x, 1e3 * (-EQUI("Gypsum")), symbol = Plus, color = Magenta
+  70 PLOT_XY x, SI("Gypsum"), y_axis = 2, line_width = 2, symbol = Circle, symbol_size = 8, color = Magenta
+        -end
+END
+
+# ========== Part 5: Log-scale Y axis (manual -axis_scale with log) ==========
+SOLUTION 5  Pure water
+        pH      7
+        temp    25
+EQUILIBRIUM_PHASES 5
+        Fluorite        0.0
+REACTION 5
+        Ca(OH)2  1
+        0.0     0.0001   0.0005   0.001   0.005   0.01    0.02    0.05
+USER_GRAPH 5  Fluoride vs Ca with log Y axis
+        -headings F
+        -axis_titles "Calcium, mg/L" "Fluoride, mg/L (log scale)"
+        -chart_title "Fluorite Equilibrium - Log Y (Manual axis_scale log)"
+        -axis_scale y_axis auto auto auto auto log
+        -start
+  10 PLOT_XY TOT("Ca")*40.08e3, TOT("F")*19e3, color = Blue, symbol = Circle
+        -end
+END

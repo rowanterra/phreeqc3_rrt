@@ -1,5 +1,7 @@
 # PHREEQC ![workflow](https://github.com/usgs-coupled/phreeqc3/actions/workflows/cmake.yml/badge.svg)
 
+**This repo is organized into two main folders:** **`og/`** — original app from the authors (sources, examples, database, doc; at root, `examples` is a symlink to `og/examples`). **`rrt_webapp/`** — Flask webapp for running examples and viewing USER_GRAPH charts. Build from repo root: `cmake -S og -B build && cmake --build build`. See `og/README.md` and `rrt_webapp/README.md`.
+
 ## Description
 
 PHREEQC Version 3 is a computer program written in the C++ programming language 

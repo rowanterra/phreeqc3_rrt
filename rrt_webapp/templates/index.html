@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<!-- ### edited by rowanterra -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PHREEQC Web</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3"></script>
+  <style>
+    :root { --bg: #1a1b26; --card: #24283b; --text: #c0caf5; --accent: #7aa2f7; --muted: #565f89; }
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 1rem; min-height: 100vh; }
+    h1 { font-size: 1.5rem; margin: 0 0 1rem; color: var(--accent); }
+    section { background: var(--card); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
+    section h2 { font-size: 1rem; margin: 0 0 0.75rem; color: var(--muted); }
+    input[type="file"], button { margin-right: 0.5rem; margin-bottom: 0.5rem; }
+    button {
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      padding: 0.5rem 1.25rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      min-height: 2.25rem;
+      display: inline-block;
+      position: relative;
+      z-index: 1;
+    }
+    button:hover { filter: brightness(1.15); }
+    button:active { filter: brightness(0.95); }
+    button.secondary { background: var(--muted); color: var(--text); }
+    #upload-form { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+    #upload-form label { display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer; }
+    .compact-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin-bottom: 0.4rem; }
+    .compact-row .compact-label { font-size: 0.85rem; color: var(--muted); margin-right: 0.25rem; }
+    .example-buttons { display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; }
+    .example-buttons button { padding: 0.25rem 0.6rem; font-size: 0.85rem; min-height: auto; }
+    #chart-buttons { max-width: 100%; overflow-x: auto; overflow-y: hidden; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+    #chart-buttons::-webkit-scrollbar { height: 6px; }
+    #chart-buttons::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 3px; }
+    button.small { padding: 0.2rem 0.5rem; font-size: 0.8rem; }
+    .chart-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; }
+    .chart-toolbar label { display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer; font-size: 0.9rem; }
+    #chart-container { margin-top: 1rem; max-width: 900px; height: 400px; }
+    .message { margin-top: 0.5rem; font-size: 0.9rem; color: var(--muted); }
+    .error { color: #f7768e; }
+    button:disabled { opacity: 0.7; cursor: not-allowed; }
+    .upload-loading { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; }
+    .upload-loading .spinner {
+      width: 20px; height: 20px;
+      border: 2px solid var(--muted);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    .upload-loading .bar {
+      flex: 1; max-width: 200px; height: 4px;
+      background: var(--muted); border-radius: 2px;
+      overflow: hidden;
+    }
+    .upload-loading .bar::after {
+      content: '';
+      display: block; height: 100%; width: 40%;
+      background: var(--accent);
+      animation: slide 1.2s ease-in-out infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes slide { 0%, 100% { transform: translateX(-100%); } 50% { transform: translateX(250%); } }
+    .upload-loading.hidden { display: none; }
+  </style>
+</head>
+<body>
+  <h1>PHREEQC Web</h1>
+
+  <section>
+    <h2>Upload & run</h2>
+    <form id="upload-form">
+      <input type="file" name="file" accept=".pqi,.dat,.inp,.txt" id="file-input">
+      <label><input type="checkbox" name="run" id="run-after"> Run phreeqc after upload</label>
+      <span class="message" style="margin:0; font-size:0.8rem;">(choose file, then click Upload)</span>
+      <button type="submit" id="upload-btn">Upload</button>
+    </form>
+    <div class="upload-loading hidden" id="upload-loading" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span>
+      <span class="bar"></span>
+      <span id="upload-loading-text">Uploading…</span>
+    </div>
+    <p class="message" id="upload-msg"></p>
+    <p class="message" style="font-size: 0.85rem; margin-top: 0.25rem;">If phreeqc isn’t found, build from repo root: <code>cmake -S og -B build && cmake --build build</code> Or run phreeqc yourself and copy <code>phreeqc_user_graph_*.json</code> into <code>rrt_webapp/data/output/</code>, then Refresh.</p>
+  </section>
+
+  <section>
+    <h2>Examples & charts</h2>
+    <div class="compact-row examples-charts-row">
+      <div id="example-buttons" class="example-buttons"></div>
+      <button type="button" class="secondary small" id="refresh-charts">Refresh</button>
+      <div id="chart-buttons" class="example-buttons"></div>
+    </div>
+    <p class="message" style="font-size: 0.8rem; margin-top: 0.35rem;">Repo <code>examples/</code>: click an example to run it. Charts from that run appear below automatically (e.g. Ex. 5 has USER_GRAPH). Only repo example runs are shown.</p>
+  </section>
+
+  <section>
+    <h2>Chart</h2>
+    <div class="chart-toolbar">
+      <button type="button" class="secondary" id="chart-reset-zoom" title="Reset zoom/pan">Reset zoom</button>
+      <button type="button" class="secondary" id="chart-save-png" title="Download chart as PNG with transparent background">Save PNG (transparent)</button>
+      <label><input type="checkbox" id="chart-grid" checked> Grid</label>
+      <label><input type="checkbox" id="chart-use-scale" checked> Use axis scale from file</label>
+    </div>
+    <p class="message" style="font-size: 0.85rem; margin-top: 0.25rem;">Save PNG exports with transparent background.</p>
+    <div id="chart-container"><canvas id="chart"></canvas></div>
+  </section>
+
+  <script>
+    const uploadForm = document.getElementById('upload-form');
+    const fileInput = document.getElementById('file-input');
+    const runAfter = document.getElementById('run-after');
+    const uploadBtn = document.getElementById('upload-btn');
+    const uploadMsg = document.getElementById('upload-msg');
+    const uploadLoading = document.getElementById('upload-loading');
+    const uploadLoadingText = document.getElementById('upload-loading-text');
+    const exampleButtons = document.getElementById('example-buttons');
+    const chartButtons = document.getElementById('chart-buttons');
+    const refreshBtn = document.getElementById('refresh-charts');
+    const chartCanvas = document.getElementById('chart');
+    let currentChart = null;
+    let currentChartPath = null;
+    let currentChartTitle = 'chart';
+
+    function setUploadLoading(loading, text) {
+      uploadLoading.classList.toggle('hidden', !loading);
+      uploadLoadingText.textContent = text || (runAfter.checked ? 'Running phreeqc…' : 'Uploading…');
+      uploadBtn.disabled = loading;
+    }
+
+    uploadForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      uploadMsg.textContent = '';
+      if (!fileInput.files.length) { uploadMsg.textContent = 'Choose a file.'; uploadMsg.classList.add('error'); return; }
+      const fd = new FormData();
+      fd.append('file', fileInput.files[0]);
+      fd.append('run', runAfter.checked);
+      setUploadLoading(true, runAfter.checked ? 'Running phreeqc…' : 'Uploading…');
+      try {
+        const r = await fetch('/api/upload', { method: 'POST', body: fd });
+        const data = await r.json();
+        if (!r.ok) { uploadMsg.textContent = data.error || 'Upload failed'; uploadMsg.classList.add('error'); return; }
+        uploadMsg.textContent = data.run ? (data.message || 'Done.') : 'Saved.';
+        uploadMsg.classList.remove('error');
+        if (data.run) loadCharts();
+      } catch (err) {
+        uploadMsg.textContent = err.message;
+        uploadMsg.classList.add('error');
+      } finally {
+        setUploadLoading(false);
+      }
+    });
+
+    function escapeAttr(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    }
+
+    function encodeChartPath(path) {
+      return path.split('/').map(encodeURIComponent).join('/');
+    }
+
+    async function loadExamples() {
+      try {
+        const r = await fetch('/api/examples');
+        const data = await r.json();
+        const examples = Array.isArray(data.examples) ? data.examples : [];
+        exampleButtons.innerHTML = examples.length
+          ? examples.map(ex => {
+              const title = ex.description ? escapeAttr(ex.description) : '';
+              return `<button type="button" class="secondary" data-name="${escapeAttr(ex.name)}"${title ? ` title="${title}"` : ''}>${escapeAttr(ex.label)}</button>`;
+            }).join('')
+          : '<span class="message">No .pqi files in manual_examples/files/</span>';
+        exampleButtons.querySelectorAll('button[data-name]').forEach(btn => {
+          btn.addEventListener('click', () => runExample(btn.dataset.name, btn));
+        });
+      } catch (err) {
+        exampleButtons.innerHTML = '<span class="error">Failed to load examples</span>';
+      }
+    }
+
+    async function runExample(name, btn) {
+      const label = btn ? btn.textContent : name;
+      if (btn) { btn.disabled = true; btn.textContent = '…'; }
+      uploadMsg.textContent = '';
+      uploadMsg.classList.remove('error');
+      try {
+        const r = await fetch('/api/run-example', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
+        const data = await r.json();
+        if (!r.ok) { uploadMsg.textContent = data.error || 'Run failed'; uploadMsg.classList.add('error'); return; }
+        uploadMsg.textContent = data.message || 'Done. Click Refresh to see charts.';
+        await loadCharts();
+        if (data.first_chart_path) await showChart(data.first_chart_path);
+      } catch (err) {
+        uploadMsg.textContent = err.message || 'Request failed';
+        uploadMsg.classList.add('error');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = label; }
+      }
+    }
+
+    // PHREEQC USER_GRAPH color names (manual) -> hex
+    const phreeqcColors = {
+      red: '#f7768e', green: '#9ece6a', blue: '#7aa2f7', orange: '#e0af68', magenta: '#bb9af7',
+      yellow: '#e0c060', black: '#c0caf5', cyan: '#73daca', brown: '#b8860b', lime: '#7cfc00', gray: '#565f89'
+    };
+    function seriesColor(name, fallbackHex) {
+      if (!name) return fallbackHex;
+      const key = String(name).toLowerCase().trim();
+      return phreeqcColors[key] || fallbackHex;
+    }
+
+    // PHREEQC symbol names -> Chart.js pointStyle
+    const phreeqcSymbols = {
+      circle: 'circle', square: 'rect', diamond: 'diamond', triangle: 'triangle',
+      xcross: 'cross', plus: 'crossRot', star: 'star', triangledown: 'triangle',
+      hdash: 'rect', vdash: 'rect', none: false
+    };
+    function seriesPointStyle(name) {
+      if (!name) return 'circle';
+      const key = String(name).toLowerCase().trim();
+      return phreeqcSymbols[key] !== undefined ? (phreeqcSymbols[key] || 'circle') : 'circle';
+    }
+
+    const defaultPalette = ['#7aa2f7','#9ece6a','#e0af68','#bb9af7','#f7768e','#73daca'];
+
+    // axis_scale from JSON: [min, max, major, minor, log] - indices 0,1 can be "auto" or number; 4 can be "log"
+    function scaleConfig(axisScale, defaultTitle) {
+      const isLog = Array.isArray(axisScale) && axisScale[4] === 'log';
+      const base = {
+        type: isLog ? 'logarithmic' : 'linear',
+        title: { display: true, text: defaultTitle },
+        grid: { display: true },
+        ticks: { maxTicksLimit: 12 }
+      };
+      if (!Array.isArray(axisScale) || axisScale.length < 4) return base;
+      const min = axisScale[0]; const max = axisScale[1];
+      if (min !== undefined && min !== 'auto' && typeof min === 'number') base.min = min;
+      if (max !== undefined && max !== 'auto' && typeof max === 'number') base.max = max;
+      if (axisScale[2] !== undefined && axisScale[2] !== 'auto' && typeof axisScale[2] === 'number')
+        base.ticks = Object.assign(base.ticks || {}, { stepSize: axisScale[2] });
+      return base;
+    }
+
+    function chartButtonLabel(c) {
+      const num = (c.name || '').replace(/^phreeqc_user_graph_|\.json$/gi, '') || '?';
+      if (!c.source) return num;
+      const base = c.source.toLowerCase();
+      const exLabel = base.startsWith('ex') ? 'Ex. ' + base.slice(2) : c.source;
+      return exLabel + ' — ' + num;
+    }
+
+    async function loadCharts() {
+      try {
+        const r = await fetch('/api/charts');
+        const data = await r.json();
+        const charts = Array.isArray(data.charts) ? data.charts : [];
+        chartButtons.innerHTML = charts.length
+          ? charts.map(c => `<button type="button" class="secondary" data-path="${escapeAttr(c.path)}">${escapeAttr(chartButtonLabel(c))}</button>`).join('')
+          : '<span class="message" style="font-size:0.85rem;">No charts yet. Run an example that has USER_GRAPH (e.g. Ex. 5); the list updates after each run.</span>';
+        chartButtons.querySelectorAll('button[data-path]').forEach(btn => {
+          btn.addEventListener('click', () => showChart(btn.dataset.path));
+        });
+      } catch (err) {
+        chartButtons.innerHTML = '<span class="error">Failed to load charts</span>';
+      }
+    }
+
+    async function showChart(path) {
+      const r = await fetch('/api/charts/' + encodeChartPath(path));
+      if (!r.ok) {
+        uploadMsg.textContent = 'Chart not found: ' + path;
+        uploadMsg.classList.add('error');
+        return;
+      }
+      uploadMsg.textContent = '';
+      uploadMsg.classList.remove('error');
+      currentChartPath = path;
+      const spec = await r.json();
+      currentChartTitle = (spec.chart_title || 'USER_GRAPH').replace(/[^\w\s-]/g, '').replace(/\s+/g, '_') || 'chart';
+      if (currentChart) currentChart.destroy();
+      const series = spec.series || [];
+      const axisTitles = spec.axis_titles || [];
+      const hasY2 = series.some(s => s.y_axis === 2) || axisTitles[2];
+      const useScaleFromFile = document.getElementById('chart-use-scale').checked;
+      const showGrid = document.getElementById('chart-grid').checked;
+
+      const isLineOnly = (s) => (s.symbol && String(s.symbol).toLowerCase() === 'none');
+      const hasTsvOverlay = Array.isArray(spec.plot_tsv_file) && spec.plot_tsv_file.length > 0;
+      const calcLabels = (() => {
+        const ids = (series || []).map(s => (s.id || '').trim());
+        const colors = (series || []).map(s => (s.color || '').toLowerCase());
+        if (series.length !== 12) return null;
+        const want = ['gypsum', 'p=500.bar', 'p=1000.bar', 'anhydrite', 'p=500.bar', 'p=1000.bar'];
+        const match = ids.slice(0, 6).every((id, i) => id.toLowerCase() === want[i]) &&
+          colors.slice(6, 12).every((c, i) => (c === 'red' && i < 3) || (c === 'green' && i >= 3));
+        if (!match) return null;
+        return ['Gypsum (1 bar)', 'Gypsum (500 bar)', 'Gypsum (1000 bar)', 'Anhydrite (1 bar)', 'Anhydrite (500 bar)', 'Anhydrite (1000 bar)'];
+      })();
+      const datasets = series.map((s, i) => {
+        const hex = seriesColor(s.color, defaultPalette[i % defaultPalette.length]);
+        const pointStyle = seriesPointStyle(s.symbol);
+        const lineOnly = isLineOnly(s);
+        const data = (s.x || [])
+          .map((xv, j) => ({ x: xv, y: (s.y || [])[j] }))
+          .filter(p => typeof p.x === 'number' && typeof p.y === 'number')
+          .sort((a, b) => a.x - b.x);
+        const stroke = lineOnly && (s.color || '').toLowerCase() === 'black'
+          ? '#565f89' : hex;
+        const label = (s.id && s.id.trim()) || (calcLabels && i >= 6 ? calcLabels[i - 6] : null) ||
+          (lineOnly && !(s.id && s.id.trim()) ? 'Phase boundary' : null) || `Series ${i + 1}`;
+        const pointsOnly = hasTsvOverlay && !lineOnly;
+        return {
+          label,
+          data,
+          borderColor: stroke,
+          backgroundColor: hex + '99',
+          pointBackgroundColor: hex,
+          pointBorderColor: hex,
+          pointBorderWidth: 1,
+          borderWidth: lineOnly ? 2.5 : (pointsOnly ? 0 : 2),
+          tension: lineOnly ? 0 : 0.1,
+          pointRadius: lineOnly ? 0 : 4,
+          pointHoverRadius: 6,
+          pointStyle: pointStyle || undefined,
+          yAxisID: (hasY2 && s.y_axis === 2) ? 'y2' : 'y',
+          _lineOnly: lineOnly,
+        };
+      });
+      datasets.sort((a, b) => (a._lineOnly ? 1 : 0) - (b._lineOnly ? 1 : 0));
+      datasets.forEach(d => delete d._lineOnly);
+
+      const xScale = useScaleFromFile && spec.axis_scale_x
+        ? scaleConfig(spec.axis_scale_x, axisTitles[0] || 'x')
+        : { type: 'linear', title: { display: true, text: axisTitles[0] || 'x' }, grid: { display: showGrid }, ticks: { maxTicksLimit: 12 } };
+
+      const yScale = useScaleFromFile && spec.axis_scale_y
+        ? scaleConfig(spec.axis_scale_y, axisTitles[1] || 'y')
+        : { type: 'linear', position: 'left', title: { display: true, text: axisTitles[1] || 'y' }, grid: { display: showGrid }, ticks: { maxTicksLimit: 12 } };
+      yScale.position = 'left';
+
+      const scales = {
+        x: Object.assign({}, xScale, { grid: { display: showGrid } }),
+        y: Object.assign({}, yScale, { grid: { display: showGrid } })
+      };
+      if (hasY2) {
+        scales.y2 = useScaleFromFile && spec.axis_scale_y2
+          ? scaleConfig(spec.axis_scale_y2, axisTitles[2] || 'y2')
+          : { type: 'linear', position: 'right', title: { display: true, text: axisTitles[2] || 'y2' }, grid: { display: false }, ticks: { maxTicksLimit: 12 } };
+        scales.y2.position = 'right';
+        scales.y2.grid = { display: false };
+      }
+
+      const isKFeldspar = (spec.chart_title || '').indexOf('K-Feldspar') !== -1;
+      const plugins = {
+        title: { display: true, text: spec.chart_title || 'USER_GRAPH', font: { size: 16 } },
+        legend: { position: 'top' },
+        tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y?.toFixed(4) ?? ctx.parsed.y} at x = ${ctx.parsed.x?.toFixed(4) ?? ctx.parsed.x}` } },
+        zoom: {
+          zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy' },
+          pan: { enabled: true, mode: 'xy' },
+          limits: { x: { min: 'original', max: 'original' }, y: { min: 'original', max: 'original' } }
+        }
+      };
+      if (isKFeldspar && typeof Chart !== 'undefined' && Chart.registry && Chart.registry.getPlugin('annotation')) {
+        plugins.annotation = {
+          annotations: {
+            kMica:    { type: 'label', xValue: -6.5, yValue: 6.5, content: 'K-mica',    backgroundColor: 'rgba(36,40,59,0.85)', font: { size: 12 }, color: '#c0caf5', adjustScaleRange: false },
+            gibbsite: { type: 'label', xValue: -5.5, yValue: 2.5, content: 'Gibbsite', backgroundColor: 'rgba(36,40,59,0.85)', font: { size: 12 }, color: '#c0caf5', adjustScaleRange: false },
+            kaolinite: { type: 'label', xValue: -3.5, yValue: 0.5, content: 'Kaolinite', backgroundColor: 'rgba(36,40,59,0.85)', font: { size: 12 }, color: '#c0caf5', adjustScaleRange: false },
+            kFeldspar: { type: 'label', xValue: -1.2, yValue: 4,   content: 'K-feldspar', backgroundColor: 'rgba(36,40,59,0.85)', font: { size: 12 }, color: '#c0caf5', adjustScaleRange: false }
+          }
+        };
+      }
+      currentChart = new Chart(chartCanvas, {
+        type: 'line',
+        data: { datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: { padding: { top: 8, right: 12, bottom: 8, left: 12 } },
+          interaction: { mode: 'nearest', intersect: false },
+          plugins,
+          scales
+        }
+      });
+
+      document.getElementById('chart-reset-zoom').onclick = () => currentChart?.resetZoom();
+      document.getElementById('chart-save-png').onclick = () => {
+        if (!currentChart) return;
+        const url = chartCanvas.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = currentChartTitle + '.png';
+        a.click();
+      };
+      document.getElementById('chart-grid').onchange = () => { if (currentChart) { currentChart.options.scales.x.grid.display = document.getElementById('chart-grid').checked; currentChart.options.scales.y.grid.display = document.getElementById('chart-grid').checked; if (currentChart.options.scales.y2) currentChart.options.scales.y2.grid.display = false; currentChart.update(); } };
+      document.getElementById('chart-use-scale').onchange = () => { if (currentChartPath) showChart(currentChartPath); };
+    }
+
+    refreshBtn.addEventListener('click', loadCharts);
+    loadExamples();
+    loadCharts();
+  </script>
+</body>
+</html>

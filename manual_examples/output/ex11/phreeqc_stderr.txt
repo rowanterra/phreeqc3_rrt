@@ -1,0 +1,30 @@
+Input file: /Users/rowanterra/Desktop/phreeqc3_rrt/manual_examples/output/ex11/ex11.pqi
+
+Output file: /Users/rowanterra/Desktop/phreeqc3_rrt/manual_examples/output/ex11/ex11.pqi.out
+
+Database file: /Users/rowanterra/Desktop/phreeqc3_rrt/database/phreeqc.dat
+
+               ____________________________________________
+              |                                            |
+              |             * PHREEQC_3.8.9 *              |
+              |                                            |
+              |      A hydrogeochemical transport model    |
+              |                                            |
+              |                    by                      |
+              |       D.L. Parkhurst and C.A.J. Appelo     |
+              |                                            |
+              |              October 13, 2025              |
+              |____________________________________________|
+
+
+Initializing...                                                                 
+WARNING: Cell-lengths were read for 1 cells. Last value is used till cell 40.
+WARNING: Dispersivities were read for 1 cells. Last value is used till cell 40.
+
+Calculating transport: 40 (mobile) cells, 100 shifts, 4 mixruns...
+
+
+ERROR: Illegal command in line: GET(10), '(mmol/L)^2'
+ERROR: Fatal Basic error in USER_GRAPH.
+Stopping.
+Detaching charts...Charts detached.         

@@ -1,0 +1,157 @@
+   Input file: /Users/rowanterra/Desktop/phreeqc3_rrt/manual_examples/output/ex20A/ex20A.pqi
+  Output file: /Users/rowanterra/Desktop/phreeqc3_rrt/manual_examples/output/ex20A/ex20A.pqi.out
+Database file: /Users/rowanterra/Desktop/phreeqc3_rrt/database/phreeqc.dat
+
+------------------
+Reading data base.
+------------------
+
+	SOLUTION_MASTER_SPECIES
+	SOLUTION_SPECIES
+	PHASES
+	GAS_BINARY_PARAMETERS
+	EXCHANGE_MASTER_SPECIES
+	EXCHANGE_SPECIES
+	SURFACE_MASTER_SPECIES
+	SURFACE_SPECIES
+	MEAN_GAMMAS
+	RATES
+	END
+------------------------------------
+Reading input data for simulation 1.
+------------------------------------
+
+	DATABASE /Users/rowanterra/Desktop/phreeqc3_rrt/database/phreeqc.dat
+	TITLE Example 20A.--Calculate carbonate solid solution
+	PRINT
+	               censor_species          1e-006
+	SOLUTION 1 # water to find composition of marine carbonate
+	               pH       8.2
+	               Na        1       charge
+	               Ca        10      Calcite       0
+	               C         2
+	               [13C]     0       # permil
+	               [14C]     0       # pmc
+	               D         0       # permil
+	               [18O]     0       # permil
+	END
+-----
+TITLE
+-----
+
+ Example 20A.--Calculate carbonate solid solution
+
+WARNING: Could not find element in database, D.
+	Concentration is set to zero.
+WARNING: Could not find element in database, [13C].
+	Concentration is set to zero.
+WARNING: Could not find element in database, [14C].
+	Concentration is set to zero.
+WARNING: Could not find element in database, [18O].
+	Concentration is set to zero.
+-------------------------------------------
+Beginning of initial solution calculations.
+-------------------------------------------
+
+Initial solution 1.	
+
+-----------------------------Solution composition------------------------------
+
+	Elements           Molality       Moles
+
+	C                 2.000e-03   2.000e-03
+	Ca                3.254e-04   3.254e-04  Equilibrium with Calcite
+	Na                1.348e-03   1.348e-03  Charge balance
+
+----------------------------Description of solution----------------------------
+
+                                       pH  =   8.200    
+                                       pe  =   4.000    
+      Specific Conductance (µS/cm,  25°C)  = 188
+                          Density (g/cm³)  =   0.99717
+                               Volume (L)  =   1.00301
+                        Viscosity (mPa s)  =   0.89086
+                        Activity of water  =   1.000
+                 Ionic strength (mol/kgw)  =   2.322e-03
+                       Mass of water (kg)  =   1.000e+00
+                 Total alkalinity (eq/kg)  =   1.998e-03
+                       Total CO2 (mol/kg)  =   2.000e-03
+                         Temperature (°C)  =  25.00
+                  Electrical balance (eq)  =   2.576e-13
+ Percent error, 100*(Cat-|An|)/(Cat+|An|)  =   0.00
+                               Iterations  =   8
+                                  Total H  = 1.110144e+02
+                                  Total O  = 5.551219e+01
+
+----------------------------Distribution of species----------------------------
+
+                                               Log       Log       Log    mole V
+   Species          Molality    Activity  Molality  Activity     Gamma   cm³/mol
+
+   OH-             1.692e-06   1.604e-06    -5.771    -5.795    -0.023     -4.09
+   H+              6.630e-09   6.310e-09    -8.178    -8.200    -0.022      0.00
+   H2O             5.551e+01   9.999e-01     1.744    -0.000     0.000     18.07
+C(-4)         0.000e+00
+   CH4             0.000e+00   0.000e+00   -77.791   -77.790     0.000     35.46
+C(4)          2.000e-03
+   HCO3-           1.950e-03   1.851e-03    -2.710    -2.733    -0.023     24.59
+   CO2             2.625e-05   2.626e-05    -4.581    -4.581     0.000     34.79
+   CO3-2           1.694e-05   1.376e-05    -4.771    -4.862    -0.091     -4.60
+   CaCO3           5.986e-06   5.989e-06    -5.223    -5.223     0.000    -14.60
+   NaHCO3          1.167e-06   1.168e-06    -5.933    -5.932     0.000     17.66
+Ca            3.254e-04
+   Ca+2            3.194e-04   2.592e-04    -3.496    -3.586    -0.091    -18.09
+   CaCO3           5.986e-06   5.989e-06    -5.223    -5.223     0.000    -14.60
+   CaOH+           7.189e-09   6.816e-09    -8.143    -8.166    -0.023     (0)  
+H(0)          5.634e-28
+   H2              2.817e-28   2.818e-28   -27.550   -27.550     0.000     14.99
+Na            1.348e-03
+   Na+             1.346e-03   1.277e-03    -2.871    -2.894    -0.023     -1.45
+   NaHCO3          1.167e-06   1.168e-06    -5.933    -5.932     0.000     17.66
+O(0)          1.092e-37
+   O2              5.460e-38   5.462e-38   -37.263   -37.263     0.000     30.40
+
+------------------------------Saturation indices-------------------------------
+
+  Phase               SI** log IAP   log K(298 K,   1 atm)
+
+  Aragonite        -0.11     -8.45   -8.34  CaCO3
+  Calcite           0.00     -8.45   -8.45  CaCO3
+  CH4(g)          -74.99    -77.79   -2.80  CH4
+  CO2(g)           -3.11     -4.58   -1.47  CO2
+  H2(g)           -24.45    -27.55   -3.10  H2
+  H2O(g)           -1.50     -0.00    1.50  H2O
+  O2(g)           -34.37    -37.26   -2.89  O2
+
+**For a gas, SI = log10(fugacity). Fugacity = pressure * phi / 1 atm.
+  For ideal gases, phi = 1.
+
+------------------
+End of simulation.
+------------------
+
+------------------------------------
+Reading input data for simulation 2.
+------------------------------------
+
+	SOLID_SOLUTION 1 No [14C]
+	Calcite
+	               component     Calcite                 0
+	               component     CaCO2[18O](s)           0
+	               component     CaCO[18O]2(s)           0
+	               component     CaC[18O]3(s)            0
+	               component     Ca[13C]O3(s)            0
+	               component     Ca[13C]O2[18O](s)       0
+	               component     Ca[13C]O[18O]2(s)       0
+	               component     Ca[13C][18O]3(s)        0
+	END
+ERROR: Phase not found in database, CaCO2[18O](s), assemblage 1.
+ERROR: Phase not found in database, CaCO[18O]2(s), assemblage 1.
+ERROR: Phase not found in database, CaC[18O]3(s), assemblage 1.
+ERROR: Phase not found in database, Ca[13C]O3(s), assemblage 1.
+ERROR: Phase not found in database, Ca[13C]O2[18O](s), assemblage 1.
+ERROR: Phase not found in database, Ca[13C]O[18O]2(s), assemblage 1.
+ERROR: Phase not found in database, Ca[13C][18O]3(s), assemblage 1.
+ERROR: Two components were not defined for Calcite solid solution
+ERROR: Calculations terminating due to input errors.
+Stopping.

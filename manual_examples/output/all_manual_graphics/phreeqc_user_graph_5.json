@@ -1,0 +1,11 @@
+{
+  "chart_title": "Fluorite Equilibrium - Log Y (Manual axis_scale log)",
+  "axis_titles": ["Calcium, mg/L", "Fluoride, mg/L (log scale)", ""],
+  "axis_scale_x": ["auto", "auto", "auto", "auto", null],
+  "axis_scale_y": ["auto", "auto", "auto", "auto", "log"],
+  "axis_scale_y2": ["auto", "auto", "auto", "auto", null],
+  "plot_tsv_file": [],
+  "series": [
+    {"id": "F", "color": "Blue", "symbol": "Circle", "y_axis": 1, "x": [7.7281, 10.681, 24.662, 43.723, 202.48, 402.49, 803.02, 2005.2], "y": [7.327, 6.3265, 4.3825, 3.4541, 1.9713, 1.6049, 1.3473, 1.1186]}
+  ]
+}

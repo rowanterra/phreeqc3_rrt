@@ -1,0 +1,200 @@
+TITLE Example 8.--Sorption of zinc on hydrous iron oxides.
+SURFACE_SPECIES
+     Hfo_sOH + H+ = Hfo_sOH2+
+     log_k 7.18
+     Hfo_sOH = Hfo_sO- + H+
+     log_k -8.82
+     Hfo_sOH + Zn+2 = Hfo_sOZn+ + H+
+     log_k 0.66
+     Hfo_wOH + H+ = Hfo_wOH2+
+     log_k 7.18
+     Hfo_wOH = Hfo_wO- + H+
+     log_k -8.82
+     Hfo_wOH + Zn+2 = Hfo_wOZn+ + H+
+
+     log_k -2.32
+SURFACE 1
+     Hfo_sOH          5e-6    600.    0.09
+     Hfo_wOH          2e-4
+#     -Donnan
+END
+SOLUTION 1
+     -units mmol/kgw
+     pH       8.0
+     Zn       0.0001
+     Na       100.     charge
+     N(5)     100.
+SELECTED_OUTPUT
+     -file Zn1e_7
+     -reset false
+USER_PUNCH
+  10 FOR i = 5.0 to 8 STEP 0.25
+  20 a$ = EOL$ + "USE solution 1" + CHR$(59) + " USE surface 1" + EOL$
+  30 a$ = a$ + "EQUILIBRIUM_PHASES 1" + EOL$
+  40 a$ = a$ + "     Fix_H+ " + STR$(-i) + " NaOH 10.0" + EOL$
+  50 a$ = a$ + "END" + EOL$
+  60 PUNCH a$
+  70 NEXT i
+END
+SOLUTION 2
+     -units mmol/kgw
+     pH       8.0
+     Zn       0.1
+     Na       100.     charge
+     N(5)     100.
+SELECTED_OUTPUT
+     -file Zn1e_4
+     -reset false
+USER_PUNCH
+  10 FOR i = 5 to 8 STEP 0.25
+  20 a$ = EOL$ + "USE solution 2" + CHR$(59) + " USE surface 1" + EOL$
+  30 a$ = a$ + "EQUILIBRIUM_PHASES 1" + EOL$
+  40 a$ = a$ + "     Fix_H+ " + STR$(-i) + " NaOH 10.0" + EOL$
+  50 a$ = a$ + "END" + EOL$
+  60 PUNCH a$
+  70 NEXT i
+END
+#
+# Model definitions
+#
+PHASES
+     Fix_H+
+     H+ = H+
+     log_k 0.0
+END
+#
+#   Zn = 1e-7
+
+
+SELECTED_OUTPUT
+      -file ex8.sel
+      -reset true
+      -molalities     Zn+2    Hfo_wOZn+      Hfo_sOZn+
+USER_PUNCH
+  10
+USER_GRAPH 1 Example 8
+      -headings pH Zn_solute Zn_weak_sites Zn_strong_sites Charge_balance
+      -chart_title "Total Zn = 1e-7 molal"
+      -axis_titles pH "Moles per kilogram water" "Charge balance, in milliequivalents"
+      -axis_scale x_axis 5.0 8.0 1 0.25
+      -axis_scale y_axis 1e-11 1e-6 1 1 log
+      -axis_scale sy_axis -0.15 0 0.03
+   -start
+   10 GRAPH_X -LA("H+")
+   20 GRAPH_Y MOL("Zn+2"), MOL("Hfo_wOZn+"), MOL("Hfo_sOZn+")
+   30 GRAPH_SY CHARGE_BALANCE * 1e3
+   -end
+INCLUDE$ Zn1e_7
+END
+USER_GRAPH 1
+      -detach
+END
+#
+#    Zn = 1e-4
+USER_GRAPH 2 Example 8
+      -chart_title "Total Zn = 1e-4 molal"
+      -headings pH Zn_solute Zn_weak_sites Zn_strong_sites Charge_balance
+      -axis_titles pH "Moles per kilogram water" "Charge balance, in milliequivalents"
+      -axis_scale x_axis 5.0 8.0 1 0.25
+      -axis_scale y_axis 1e-8 1e-3 1 1 log
+      -axis_scale sy_axis -0.15 0 0.03
+   -start
+   10 GRAPH_X -LA("H+")
+   20 GRAPH_Y MOL("Zn+2"), MOL("Hfo_wOZn+"), MOL("Hfo_sOZn+")
+   30 GRAPH_SY CHARGE_BALANCE * 1e3
+   -end
+INCLUDE$ Zn1e_4
+END
+
+      The composition and other characteristics of an assemblage of surfaces are defined with the
+SURFACE data block. For each surface, the moles of each type of site and the surface area must be
+defined. In the input file, all the surface sites initially are in the uncharged, protonated form. Alternatively,
+the surface can be initialized to be in equilibrium with a solution with -equilibrate solution_number. In both
+cases, the composition of the surfaces will vary with the extent of subsequent reactions.
+
+      The number of binding sites and surface areas may remain fixed or may vary if the surface is related to
+an equilibrium phase or a kinetic reaction. In this example, the number of strong binding sites (Hfo_s,
+
+5×10-6 mol) and of weak binding sites (Hfo_w, 2×10-4 mol) remain fixed. With -sites_units density, the
+number of sites per nm2 (square nanometer) may be entered, instead of moles. The surface area must be
+defined with two numbers, the area per mass of surface material (here, 600 m2/g) and the total mass of
+surface material (here, 0.09 g). The use of these two numbers is traditional, but only the surface area
+obtained from the product of the numbers is used to determine the specific charge and the surface potential.
+The surface area may be entered with any of the binding sites for a surface; in table.27, the surface area is
+entered with Hfo_s.
+
+       Two sodium nitrate solutions are defined with different concentrations of zinc (SOLUTION 1 and 2
+data blocks), which can be recalled later in the run by USE solution 1 or 2. Together with the definitions of
+these solutions, USER_PUNCH is used to generate a PHREEQC input file, as explained in the next
+paragraph. A pseudo-phase, “Fix_H+” is defined with the PHASES data block. This phase is not real, but is
+used in the batch-reaction simulations to fix the pH at specified values.
+
+       The remaining simulations in the input file equilibrate the surface with either solution 1 or solution 2
+for pH values that range from 5 to 8. It is possible to use the REACTION data block to add or remove
+varying amounts of NaOH from the solution in a single simulation, but the reaction increments will not
+produce evenly spaced pH values and the size of the reaction increments is not known beforehand.
+Alternatively, evenly spaced pH values can be obtained by using the phase “Fix_H+” in an
+EQUILIBRIUM_PHASES data block; the saturation indices correspond to the desired pH. A separate
+simulation is needed for each pH, illustrated here for pH = 5.
+
+USE solution 1
+USE surface 1
+EQUILIBRIUM_PHASES 1
+      Fix_H+              -5 NaOH 10.0
+END
+       Writing a similar set of data blocks for each pH is easy, but tedious. However, a shortcut is available.
+The simulations can be generated with a small Basic program in keyword USER_PUNCH and punched to
+the files zn1e_7 and zn1e_4. The Basic program punches a string, a$, that contains the PHREEQC
+keywords and instructions for each pH, which is set by the FOR-loop variable i. EOL$ is a function that
+returns a new-line character. During the run, the files are inserted in the input file with INCLUDE$ zn1e_7
+and INCLUDE$ zn1e_4.
+
+       NaOH is added or removed from each solution to produce the specified saturation index for “Fix_H+”
+or log activity of H+ (which is the negative of pH). However, a very low pH may not be attainable by
+
+removing all of the sodium from the solution. In this case HNO3 should be used as reactant instead of
+NaOH.1
+
+       The results of the simulation are plotted in figure.9 and are consistent with the results shown in
+Dzombak and Morel (1990, figure 8.9). Zinc is more strongly sorbed at high pH values than at low pH
+values. In addition, at low concentrations of zinc, the strong binding sites outcompete the weak binding sites
+for zinc over the entire pH range, and at high pH, most of the zinc resides at the strong binding sites. At
+larger zinc concentrations, the strong binding sites predominate only at low pH. Because all the strong
+binding sites become filled at higher pH, most of the zinc resides at the more numerous weak binding sites
+at high pH and large zinc concentrations.
+
+       There is one more point to be noted in figure.9. The charge balance of the solution, plotted on the
+secondary Y axis, becomes negative with decreasing pH because the surface sorbs protons from the
+solution. If the solution and surface are separated (for example by TRANSPORT or by a SAVE and
+subsequent USE), the surface will keep its positive charge, and the solution its negative counter-charge.
+Such a separation of electrical charge is physically impossible. In reality, an electrical double layer exists on
+the surface that counterbalances the surface charge, and which remains with the surface when surface and
+solution are separated, thus keeping both of them electrically neutral. If the identifier -Donnan is added in
+keyword SURFACE, the composition of the electrical double layer is calculated and stored with each of the
+surfaces in the assemblage; this explicitly calculated electrical double layer makes each surface a neutral
+entity. In the input file this option (-Donnan) can be uncommented, resulting in a zero charge balance when
+the file is run again.
+      1It is possible to let the program determine whether NaOH or HNO
+                                                                         3 should be added to attain a pH if an additional pseudo phase is
+
+defined. The following example attains a pH of 2 and 10 without specifying different alternate reactions for the phase Fix_H+.
+
+ PHASES
+ NaNO3
+                  NaNO3 = Na+ + NO3-
+                  log_K -20
+
+ Fix_H+
+                  H+ = H+
+                  log_K 0
+ END
+ SOLUTION 1
+ EQUILIBRIUM_PHASES
+              NaNO3 0 10
+              Fix_H+ -2 HNO3 10
+ END
+ SOLUTION 1
+ EQUILIBRIUM_PHASES
+              NaNO3 0 10
+              Fix_H+ -12 HNO3 10
+ END

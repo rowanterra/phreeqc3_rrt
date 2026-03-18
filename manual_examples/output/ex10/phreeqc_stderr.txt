@@ -1,0 +1,23 @@
+Input file: /Users/rowanterra/Desktop/phreeqc3_rrt/manual_examples/output/ex10/ex10.pqi
+
+Output file: /Users/rowanterra/Desktop/phreeqc3_rrt/manual_examples/output/ex10/ex10.pqi.out
+
+Database file: /Users/rowanterra/Desktop/phreeqc3_rrt/database/phreeqc.dat
+
+               ____________________________________________
+              |                                            |
+              |             * PHREEQC_3.8.9 *              |
+              |                                            |
+              |      A hydrogeochemical transport model    |
+              |                                            |
+              |                    by                      |
+              |       D.L. Parkhurst and C.A.J. Appelo     |
+              |                                            |
+              |              October 13, 2025              |
+              |____________________________________________|
+
+
+Initializing...                                                                 Simulation 6. Reaction step 10.          /                                             
+
+End of Run after 0.313634 Seconds.
+Detaching charts...Charts detached.         

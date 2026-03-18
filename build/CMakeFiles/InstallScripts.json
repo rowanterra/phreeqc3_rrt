@@ -1,0 +1,11 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/rowanterra/Desktop/phreeqc3_rrt/build/cmake_install.cmake",
+		"/Users/rowanterra/Desktop/phreeqc3_rrt/build/database/cmake_install.cmake",
+		"/Users/rowanterra/Desktop/phreeqc3_rrt/build/doc/cmake_install.cmake",
+		"/Users/rowanterra/Desktop/phreeqc3_rrt/build/examples/cmake_install.cmake",
+		"/Users/rowanterra/Desktop/phreeqc3_rrt/build/mytest/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

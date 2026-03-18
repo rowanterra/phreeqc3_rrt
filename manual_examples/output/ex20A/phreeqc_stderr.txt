@@ -1,0 +1,39 @@
+Input file: /Users/rowanterra/Desktop/phreeqc3_rrt/manual_examples/output/ex20A/ex20A.pqi
+
+Output file: /Users/rowanterra/Desktop/phreeqc3_rrt/manual_examples/output/ex20A/ex20A.pqi.out
+
+Database file: /Users/rowanterra/Desktop/phreeqc3_rrt/database/phreeqc.dat
+
+               ____________________________________________
+              |                                            |
+              |             * PHREEQC_3.8.9 *              |
+              |                                            |
+              |      A hydrogeochemical transport model    |
+              |                                            |
+              |                    by                      |
+              |       D.L. Parkhurst and C.A.J. Appelo     |
+              |                                            |
+              |              October 13, 2025              |
+              |____________________________________________|
+
+
+Initializing...                                                                 
+WARNING: Could not find element in database, D.
+	Concentration is set to zero.
+WARNING: Could not find element in database, [13C].
+	Concentration is set to zero.
+WARNING: Could not find element in database, [14C].
+	Concentration is set to zero.
+WARNING: Could not find element in database, [18O].
+	Concentration is set to zero.
+
+ERROR: Phase not found in database, CaCO2[18O](s), assemblage 1.
+ERROR: Phase not found in database, CaCO[18O]2(s), assemblage 1.
+ERROR: Phase not found in database, CaC[18O]3(s), assemblage 1.
+ERROR: Phase not found in database, Ca[13C]O3(s), assemblage 1.
+ERROR: Phase not found in database, Ca[13C]O2[18O](s), assemblage 1.
+ERROR: Phase not found in database, Ca[13C]O[18O]2(s), assemblage 1.
+ERROR: Phase not found in database, Ca[13C][18O]3(s), assemblage 1.
+ERROR: Two components were not defined for Calcite solid solution
+ERROR: Calculations terminating due to input errors.
+Stopping.
